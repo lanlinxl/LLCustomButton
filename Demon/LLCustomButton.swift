@@ -156,18 +156,19 @@ extension LLCustomButton {
     override public func layoutSubviews() {
         super.layoutSubviews()
         guard frame.size.width > 0 , frame.size.height > 0 else { return }
-        let viewWidth = frame.size.width
-        let viewHeight = frame.size.height
+        
         // ======== 渐变色层部分 ============
         if let gradientLayer = gradientLayer {
             // KVC取出Button圆角值，渐变层也要设置
             let cornerRadiuss = layer.value(forKeyPath: "cornerRadius") as? CGFloat
             gradientLayer.cornerRadius = cornerRadiuss ?? 0
             // 渐变色frame设置
-            gradientLayer.frame = CGRect(x: 0, y: 0, width: viewWidth, height: viewHeight)
+            gradientLayer.frame = bounds 
         }
 
         // ======== 子控件布局部分 ============
+        let viewWidth = frame.size.width
+        let viewHeight = frame.size.height
         let text = titleLabel.text
         let image = imageView.image
         if let text = text, let image = image {

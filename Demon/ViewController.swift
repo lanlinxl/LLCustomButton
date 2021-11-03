@@ -31,6 +31,7 @@ class ViewController: UIViewController {
         view.addSubview(customButton)
         customButton.backgroundColor = .gray
         customButton.frame = CGRect(x: 160, y: view.frame.size.height/2 - 40, width: 150, height: 120)
+    
         
     }
     
