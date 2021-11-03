@@ -277,7 +277,6 @@ public extension LLCustomButton {
 }
 
 // MARK: - 自定义按钮的lable
-
 class ButtonLabel: UILabel {
     var updateFrame: (() -> Void)?
     /// 保证任何方式赋值都能做相应处理
@@ -297,20 +296,9 @@ class ButtonLabel: UILabel {
             updateFrame?()
         }
     }
-    
-    
-    convenience init() {
-        self.init(frame: CGRect.zero)
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 }
 
+// MARK: - 自定义按钮的lable
 class ButtonImageView: UIImageView {
     var setButtonImage: (() -> Void)?
     /// 保证任何方式赋值都能做相应处理
@@ -318,17 +306,6 @@ class ButtonImageView: UIImageView {
         didSet{
             setButtonImage?()
         }
-    }
-
-    convenience init() {
-        self.init(frame: CGRect.zero)
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
 
