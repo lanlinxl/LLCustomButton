@@ -11,9 +11,9 @@ Added functionality that system buttons are not easy to implement
 
 ## My information
 ```javascript
-var ihubo = {
+var info = {
   nickName  : "lanlinxl",
-  site : "https://juejin.cn/post/7025864328301510687"
+  address : "https://juejin.cn/post/7025864328301510687"
 }
 ```
 
