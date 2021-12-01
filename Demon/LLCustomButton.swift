@@ -172,13 +172,7 @@ extension LLCustomButton {
         let text = titleLabel.text
         let image = imageView.image
         if let text = text, let image = image {
-            var titleLabelSize: CGSize = CGSize.zero
-            if layout == .titleLeft || layout == .titleRight {
-                titleLabelSize = labelSize(text: text, maxSize: CGSize(width: viewWidth / 2 - horizontalSpace, height: viewHeight), font: titleLabel.font)
-            } else {
-                titleLabelSize = labelSize(text: text, maxSize: CGSize(width: viewWidth, height: viewHeight / 2 - verticalSpace), font: titleLabel.font)
-            }
-            
+            let titleLabelSize = labelSize(text: text, maxSize: CGSize(width: viewWidth , height: viewHeight), font: titleLabel.font)
             updateViewSize(with: titleLabel, size: titleLabelSize)
             updateViewSize(with: imageView, size: image.size)
             let horizontalSpaceImage = horizontalSpace + image.size.width / 2.0
