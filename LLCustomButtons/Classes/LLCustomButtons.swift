@@ -1,15 +1,16 @@
 //
-//  LLCustomButton.swift
+//  SFCustomButton.swift
 //  test
 //
 //  Created by lzwk_lanlin on 2021/10/25.
 //  Copyright © 2021 Weike. All rights reserved.
+//
 
-import UIKit
 import Foundation
-public class LLCustomButton: UIControl {
+import UIKit
+public class LLCustomButtons: UIControl {
     /// 布局类型 (同时有标题和图片的时候生效)
-    enum Layout {
+    public enum Layout {
         /// 标题在左
         case titleLeft
         /// 标题在右
@@ -20,47 +21,54 @@ public class LLCustomButton: UIControl {
         case titleBottom
     }
 
-    var layout: Layout = .titleLeft{
-        didSet{
-            updateLayout()
-        }
+    public var layout: Layout = .titleLeft {
+        didSet { layoutIfNeeded() }
     }
+
     /// 标题
-    lazy var titleLabel = ButtonLabel()
+    public lazy var titleLabel = LLCustomButtonLabel()
 
     /// 图片
-    lazy var imageView = ButtonImageView()
-    
+    public lazy var imageView = UIImageView()
+
     /// 水平间距
-    var horizontalSpace: CGFloat = 4.0
+    public var horizontalSpace: CGFloat = 4.0
 
     /// 竖直间距
-    var verticalSpace: CGFloat = 4.0
+    public var verticalSpace: CGFloat = 4.0
+
+    /// 高亮背景色
+    public var hightlightBackColor: UIColor?
+
+    /// 渐变高亮色
+    public var gradientHightlightBackColors: [CGColor?] = []
     
-    /// 按钮点击高亮背景色
-    var hightlightBackColor: UIColor?
+    /// 文本颜色
+    private var normalTextColor: UIColor = .black
     
     /// 按钮点击高亮文本颜色
-    var hightlightTextColor: UIColor?
+    public var hightlightTextColor: UIColor?{
+        didSet{ normalTextColor = titleLabel.textColor }
+    }
     
-    /// 渐变高亮色
-    var gradientHightlightBackColors: [CGColor?] = []
-    
-    /// 保存上次文本颜色
-    private var previousTxetColor: UIColor = .black
-    
-    /// 保存上次背景色
+    /// 圆角
+    private var cornerRadiuss: CGFloat = 0
+
+    /// 背景色
     private var previousBackgroundColor: UIColor = .clear
 
-    /// 保存上次渐变色数组
-    private var previousGradientColors: [CGColor?] = []
-    
     /// 渐变色数组
     private var gradientColors: [CGColor?] = []
 
     /// 渐变色layer
-    private var gradientLayer : CAGradientLayer?
-    
+    private var gradientLayer: CAGradientLayer?
+
+    /// 高亮色layer
+    private var hightLigihtLayer: CAGradientLayer?
+
+    /// 是否长按
+    private var isTouched: Bool = false
+
     /// 每组颜色所在位置（范围0~1)
     private var colorLocations: [NSNumber] = [0.0, 1.0]
 
@@ -69,7 +77,7 @@ public class LLCustomButton: UIControl {
 
     /// 结束位置（默认是矩形右上角）
     private var endPoint = CGPoint(x: 1, y: 0)
-    
+
     convenience init() {
         self.init(frame: CGRect.zero)
         backgroundColor = .clear
@@ -84,66 +92,61 @@ public class LLCustomButton: UIControl {
 
     private func initViews() {
         addSubview(titleLabel)
+        addSubview(imageView)
         titleLabel.isHidden = true
+        imageView.isHidden = true
         titleLabel.font = .systemFont(ofSize: 14)
         titleLabel.textColor = .black
         titleLabel.numberOfLines = 0
         /// 不管是点语法设值还是方法设值都在这里处理
-        titleLabel.updateFrame = { [unowned self] in
-            titleLabel.isHidden = titleLabel.text == nil ? true : false
-            updateLayout()
-        }
-        
-        
-        addSubview(imageView)
-        imageView.isHidden = true
-        imageView.setButtonImage = { [unowned self] in
-            imageView.isHidden = imageView.image == nil ? true : false
-            updateLayout()
+        titleLabel.setTitleText = { [unowned self] in
+            if titleLabel.text == nil || titleLabel.text == "" {
+                titleLabel.isHidden = true
+                return
+            }
+            titleLabel.isHidden = false
+            layoutIfNeeded()
+            setNeedsLayout()
         }
     }
 
-    /// 设置文本
-    func setTitle(_ text: String?) {
+    public func setTitle(_ text: String?) {
         titleLabel.text = text
     }
 
-    /// 设置文本颜色
-    func setTitleColor(_ color: UIColor?) {
+    public func setTitleColor(_ color: UIColor?) {
         guard let color = color else { return }
         titleLabel.textColor = color
     }
-    
-    /// 设置图片
-    func setImage(_ image: UIImage?) {
+
+    public func setImage(_ image: UIImage?) {
+        guard let image = image else {
+            imageView.isHidden = true
+            return
+        }
+        imageView.isHidden = false
         imageView.image = image
+        layoutIfNeeded()
+        setNeedsLayout()
     }
-    
+
     /// 渐变色背景设置
-    func gradientColor(colors: [CGColor?], startPoint: CGPoint = CGPoint(x: 0, y: 0), endPoint: CGPoint = CGPoint(x: 1, y: 0),colorLocations: [NSNumber] = [0,1]) {
+   public func gradientColor(colors: [CGColor?], startPoint: CGPoint = CGPoint(x: 0, y: 0), endPoint: CGPoint = CGPoint(x: 1, y: 0), colorLocations: [NSNumber] = [0, 1]) {
         guard let gradient = gradientLayer == nil ? CAGradientLayer() : gradientLayer else { return }
         gradient.locations = colorLocations
         gradient.colors = colors as [Any]
         gradient.startPoint = startPoint
         gradient.endPoint = endPoint
         layer.insertSublayer(gradient, at: 0)
-
         gradientLayer = gradient
         gradientColors = colors
         self.colorLocations = colorLocations
         self.startPoint = startPoint
         self.endPoint = endPoint
-        updateLayout()
     }
-    
-    /// 更新布局
-    func updateLayout(){
-        setNeedsLayout()
-        layoutIfNeeded()
-    }
-    
+
     /// 移除渐变层
-    func removeGradientLayer(){
+    public func removeGradientLayer() {
         gradientLayer?.removeFromSuperlayer()
         gradientHightlightBackColors.removeAll()
         gradientColors.removeAll()
@@ -151,18 +154,19 @@ public class LLCustomButton: UIControl {
 }
 
 // MARK: - 控件布局
-extension LLCustomButton {
+
+extension LLCustomButtons {
     override public func layoutSubviews() {
         super.layoutSubviews()
-        guard frame.size.width > 0 , frame.size.height > 0 else { return }
+        guard frame.size.width > 0, frame.size.height > 0 else { return }
+        // KVC取出Button圆角值，渐变层也要设置
+        cornerRadiuss = layer.value(forKeyPath: "cornerRadius") as? CGFloat ?? 0
         
         // ======== 渐变色层部分 ============
         if let gradientLayer = gradientLayer {
-            // KVC取出Button圆角值，渐变层也要设置
-            let cornerRadiuss = layer.value(forKeyPath: "cornerRadius") as? CGFloat
-            gradientLayer.cornerRadius = cornerRadiuss ?? 0
+            gradientLayer.cornerRadius = cornerRadiuss
             // 渐变色frame设置
-            gradientLayer.frame = bounds 
+            gradientLayer.frame = bounds
         }
 
         // ======== 子控件布局部分 ============
@@ -171,7 +175,9 @@ extension LLCustomButton {
         let text = titleLabel.text
         let image = imageView.image
         if let text = text, let image = image {
-            let titleLabelSize = labelSize(text: text, maxSize: CGSize(width: viewWidth , height: viewHeight), font: titleLabel.font)
+            var titleLabelSize: CGSize = CGSize.zero
+            titleLabelSize = labelSize(text: text, maxSize: CGSize(width: viewWidth, height: viewHeight), font: titleLabel.font)
+
             updateViewSize(with: titleLabel, size: titleLabelSize)
             updateViewSize(with: imageView, size: image.size)
             let horizontalSpaceImage = horizontalSpace + image.size.width / 2.0
@@ -202,9 +208,9 @@ extension LLCustomButton {
             imageView.center = CGPoint(x: viewWidth / 2.0, y: viewHeight / 2.0)
         }
     }
-    
+
     /// 更新控件大小
-    func updateViewSize(with targetView: UIView , size: CGSize){
+    func updateViewSize(with targetView: UIView, size: CGSize) {
         var rect = targetView.frame
         rect.size.width = size.width
         rect.size.height = size.height
@@ -220,94 +226,106 @@ extension LLCustomButton {
     }
 }
 
-
-
 // MARK: - 按钮点击效果
-public extension LLCustomButton {
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        previousBackgroundColor = backgroundColor ?? .clear
-        // 渐变色
+
+public extension LLCustomButtons {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        if !isEnabled || !self.point(inside: point, with: event) { return super.hitTest(point, with: event) }
+        setHightLigihtLayer()
+        guard let hightLigihtLayer = hightLigihtLayer else { return super.hitTest(point, with: event) }
         if !gradientHightlightBackColors.isEmpty, !gradientColors.isEmpty {
-            previousGradientColors = gradientColors
-            gradientColor(colors:gradientHightlightBackColors,startPoint: startPoint,endPoint:endPoint,colorLocations: colorLocations)
+            hightLigihtLayer.colors = gradientHightlightBackColors as [Any]
         } else if let hightlightBackColor = hightlightBackColor {
-            // 背景色
-            backgroundColor = hightlightBackColor
+            hightLigihtLayer.colors = [hightlightBackColor.cgColor, hightlightBackColor.cgColor] as [Any]
         }
+        // 添加高亮背景色layer
+        layer.insertSublayer(hightLigihtLayer, below: titleLabel.layer)
         
         // 文字高亮色
         if hightlightTextColor != nil {
-            previousTxetColor = titleLabel.textColor
             titleLabel.textColor = hightlightTextColor
         }
+        
+        // 高亮展示0.2秒
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            if !self.isTouched {
+                // 移除高亮背景layer
+                hightLigihtLayer.removeFromSuperlayer()
+                // 如果有设置文本高亮 则恢复
+                if self.hightlightTextColor != nil{
+                    self.titleLabel.textColor = self.normalTextColor
+                }
+            }
+        }
+        return super.hitTest(point, with: event)
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        isTouched = true
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesCancelled(touches, with: event)
-        if !gradientHightlightBackColors.isEmpty, !previousGradientColors.isEmpty{
-            gradientColor(colors:previousGradientColors,startPoint: startPoint,endPoint:endPoint,colorLocations: colorLocations)
-     
-        } else if hightlightBackColor != nil  {
-            backgroundColor = previousBackgroundColor
-        }
-        if hightlightTextColor != nil {
-            titleLabel.textColor = previousTxetColor
-        }
+        hightLigihtLayer?.removeFromSuperlayer()
+        titleLabel.textColor = normalTextColor
+        isTouched = false
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
-        if !gradientHightlightBackColors.isEmpty, !previousGradientColors.isEmpty {
-            gradientColor(colors:previousGradientColors,startPoint: startPoint,endPoint:endPoint,colorLocations: colorLocations)
-        } else if hightlightBackColor != nil {
-            backgroundColor = previousBackgroundColor
-        }
-        if hightlightTextColor != nil {
-            titleLabel.textColor = previousTxetColor
-        }
+        hightLigihtLayer?.removeFromSuperlayer()
+        titleLabel.textColor = normalTextColor
+        isTouched = false
+    }
+
+    func setHightLigihtLayer() {
+        guard let ligihtLayer = hightLigihtLayer == nil ? CAGradientLayer() : hightLigihtLayer else { return }
+        ligihtLayer.locations = colorLocations
+        ligihtLayer.startPoint = startPoint
+        ligihtLayer.endPoint = endPoint
+        ligihtLayer.frame = bounds
+        ligihtLayer.cornerRadius = cornerRadiuss
+        hightLigihtLayer = ligihtLayer
     }
 }
 
 // MARK: - 自定义按钮的lable
-class ButtonLabel: UILabel {
-    var updateFrame: (() -> Void)?
-    /// 保证任何方式赋值都能做相应处理
-    override var text: String? {
-        didSet {
-            updateFrame?()
-        }
-    }
-    override var attributedText: NSAttributedString? {
-        didSet {
-            text = attributedText?.string
-        }
-    }
+public class LLCustomButtonLabel: UILabel {
+   var setTitleText: (() -> Void)?
     
-    override var font: UIFont!{
-        didSet{
-            updateFrame?()
-        }
-    }
+   /// 保证任何方式赋值都能做相应处理
+    public override var text: String? {
+       didSet {
+           setTitleText?()
+       }
+   }
+
+    public override var attributedText: NSAttributedString? {
+       didSet {
+           text = attributedText?.string
+       }
+   }
+    
+   convenience init() {
+       self.init(frame: CGRect.zero)
+   }
+
+   override init(frame: CGRect) {
+       super.init(frame: frame)
+   }
+
+   required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
-// MARK: - 自定义按钮的lable
-class ButtonImageView: UIImageView {
-    var setButtonImage: (() -> Void)?
-    /// 保证任何方式赋值都能做相应处理
-    override var image: UIImage?{
-        didSet{
-            setButtonImage?()
-        }
-    }
-}
+
 
 // MARK: - 渐变色绘制 (使用draw 在collectionview大量复用的情况下会有显示不出来的bug)
-//public extension LLCustomButton {
-//    // 绘制渐变色
+// public extension SFCustomButton {
+/// 绘制渐变色
 //    override func draw(_ rect: CGRect) {
 //        super.draw(rect)
-//        guard let context = UIGraphicsGetCurrentContext(), !gradientColors.isEmpty else {
+//        guard let context = UIGraphicsGetCurrentContext(), !gardientColors.isEmpty else {
 //            return
 //        }
 //        if layer.cornerRadius != 0.0 {
@@ -322,7 +340,7 @@ class ButtonImageView: UIImageView {
 //        }
 //
 //        var colorComponents: [CGFloat] = []
-//        for color in gradientColors {
+//        for color in gardientColors {
 //            let alpha = color.alpha
 //            let rgbComponents = color.rgbComponents
 //            let red: CGFloat = CGFloat(rgbComponents.red) / 255.0
@@ -333,6 +351,7 @@ class ButtonImageView: UIImageView {
 //            colorComponents.append(blue)
 //            colorComponents.append(alpha)
 //        }
+//
 //        guard let gardient = CGGradient(colorSpace: CGColorSpaceCreateDeviceRGB(), colorComponents: colorComponents, locations: colorLocations, count: colorLocations.count) else { return super.draw(rect) }
 //        if __CGPointEqualToPoint(startPoint, CGPoint.zero), __CGPointEqualToPoint(endPoint, CGPoint.zero) {
 //            startPoint = CGPoint(x: 0, y: 0)
@@ -346,4 +365,4 @@ class ButtonImageView: UIImageView {
 //        // 绘制渐变
 //        context.drawLinearGradient(gardient, start: newStartPoint, end: newEndPoint, options: .drawsBeforeStartLocation)
 //    }
-//}
+// }

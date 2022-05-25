@@ -1,22 +1,24 @@
 //
 //  ViewController.swift
-//  Demon
+//  LLCustomButtons
 //
-//  Created by lzwk_lanlin on 2021/11/1.
+//  Created by lzwk_lanlin on 05/25/2022.
+//  Copyright (c) 2022 lzwk_lanlin. All rights reserved.
 //
 
 import UIKit
+import LLCustomButtons
 
 class ViewController: UIViewController {
     
-    var customButton = LLCustomButton()
+    var customButton = LLCustomButtons()
     let titleList = ["文本左图片右","文本右图片左","文本上图片下","文本下图片上","添加圆角","添加阴影","添加渐变色","添加高亮色","移除文本","移除圆角","移除图片","移除阴影","移除渐变色","重置"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         for i in 0 ..< titleList.count {
-            let button = LLCustomButton()
+            let button = LLCustomButtons()
             view.addSubview(button)
             button.tag = 100 + i
             button.setTitle("\(titleList[i])")
@@ -31,8 +33,6 @@ class ViewController: UIViewController {
         view.addSubview(customButton)
         customButton.backgroundColor = .gray
         customButton.frame = CGRect(x: 160, y: view.frame.size.height/2 - 40, width: 150, height: 120)
-    
-        
     }
     
     @objc func buttonClick(sender: UIButton){
@@ -72,7 +72,6 @@ class ViewController: UIViewController {
             customButton.titleLabel.text = nil
         case "移除圆角":
             customButton.layer.cornerRadius = 0
-            customButton.updateLayout()
         case "移除图片":
             customButton.imageView.image = nil
         case "移除阴影":
@@ -90,10 +89,10 @@ class ViewController: UIViewController {
             customButton.gradientHightlightBackColors = [nil]
             customButton.hightlightTextColor = nil
             customButton.removeGradientLayer()
-            customButton.updateLayout()
      
         default:
             break
         }
     }
 }
+
