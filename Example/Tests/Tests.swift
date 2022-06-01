@@ -1,5 +1,4 @@
 import XCTest
-import LLCustomButtons
 
 class Tests: XCTestCase {
     
