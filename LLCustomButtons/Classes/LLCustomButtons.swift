@@ -47,12 +47,7 @@ public class LLCustomButtons: UIControl {
     private var normalTextColor: UIColor = .black
     
     /// 按钮点击高亮文本颜色
-    public var hightlightTextColor: UIColor?{
-        didSet{ normalTextColor = titleLabel.textColor }
-    }
-    
-    /// 圆角
-    private var cornerRadiuss: CGFloat = 0
+    public var hightlightTextColor: UIColor?
 
     /// 背景色
     private var previousBackgroundColor: UIColor = .clear
@@ -108,6 +103,10 @@ public class LLCustomButtons: UIControl {
             layoutIfNeeded()
             setNeedsLayout()
         }
+        
+        titleLabel.setTitleColor = { [unowned self] in
+            normalTextColor = titleLabel.textColor ?? .black
+        }
     }
 
     public func setTitle(_ text: String?) {
@@ -159,14 +158,18 @@ extension LLCustomButtons {
     override public func layoutSubviews() {
         super.layoutSubviews()
         guard frame.size.width > 0, frame.size.height > 0 else { return }
-        // KVC取出Button圆角值，渐变层也要设置
-        cornerRadiuss = layer.value(forKeyPath: "cornerRadius") as? CGFloat ?? 0
-        
         // ======== 渐变色层部分 ============
         if let gradientLayer = gradientLayer {
-            gradientLayer.cornerRadius = cornerRadiuss
+            // 去除隐式动画
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            
+            // KVC取出Button圆角值，渐变层也要设置
+            gradientLayer.cornerRadius = layer.value(forKeyPath: "cornerRadius") as? CGFloat ?? 0
             // 渐变色frame设置
             gradientLayer.frame = bounds
+            
+            CATransaction.commit()
         }
 
         // ======== 子控件布局部分 ============
@@ -238,14 +241,15 @@ public extension LLCustomButtons {
         } else if let hightlightBackColor = hightlightBackColor {
             hightLigihtLayer.colors = [hightlightBackColor.cgColor, hightlightBackColor.cgColor] as [Any]
         }
-        // 添加高亮背景色layer
-        layer.insertSublayer(hightLigihtLayer, below: titleLabel.layer)
-        
         // 文字高亮色
         if hightlightTextColor != nil {
+            titleLabel.isHightlightColor = true
             titleLabel.textColor = hightlightTextColor
+            titleLabel.isHightlightColor = false
         }
-        
+        // 添加高亮背景色layer
+        layer.insertSublayer(hightLigihtLayer, below: titleLabel.layer)
+
         // 高亮展示0.2秒
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             if !self.isTouched {
@@ -285,15 +289,19 @@ public extension LLCustomButtons {
         ligihtLayer.startPoint = startPoint
         ligihtLayer.endPoint = endPoint
         ligihtLayer.frame = bounds
-        ligihtLayer.cornerRadius = cornerRadiuss
+        ligihtLayer.cornerRadius = gradientLayer?.cornerRadius ?? 0
         hightLigihtLayer = ligihtLayer
     }
 }
 
 // MARK: - 自定义按钮的lable
 public class LLCustomButtonLabel: UILabel {
-   var setTitleText: (() -> Void)?
+    var setTitleText: (() -> Void)?
+    var setTitleColor: (() -> Void)?
     
+    // 是否是高亮色
+    var isHightlightColor: Bool = false
+     
    /// 保证任何方式赋值都能做相应处理
     public override var text: String? {
        didSet {
@@ -306,6 +314,14 @@ public class LLCustomButtonLabel: UILabel {
            text = attributedText?.string
        }
    }
+    
+    public override var textColor: UIColor?{
+        didSet {
+            // 如果是设置高亮色 则不触发回调
+            guard !isHightlightColor else { return }
+            setTitleColor?()
+        }
+    }
     
    convenience init() {
        self.init(frame: CGRect.zero)
@@ -366,3 +382,4 @@ public class LLCustomButtonLabel: UILabel {
 //        context.drawLinearGradient(gardient, start: newStartPoint, end: newEndPoint, options: .drawsBeforeStartLocation)
 //    }
 // }
+
